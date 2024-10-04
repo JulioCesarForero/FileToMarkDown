@@ -8,6 +8,9 @@ __pycache__/
 
 # Archivos de logs
 *.log
+*.pdf
+*.md
+
 
 # Archivos de configuración de IDEs (opcional)
 .vscode/
