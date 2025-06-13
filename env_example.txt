@@ -1,0 +1,24 @@
+# Required API Key
+LLAMA_CLOUD_API_KEY=llx-your-api-key-here
+
+# Required Directories
+INPUT_DIR=input
+OUTPUT_DIR=output
+
+# Optional: Charts output directory (default: charts)
+CHARTS_OUTPUT_DIR=charts
+
+# Optional: Parse specific pages only (e.g., "0,1,2" for first 3 pages)
+# TARGET_PAGES=0,1,2
+
+# Optional: Enable verbose parsing output
+# VERBOSE_PARSING=true
+
+# Optional: Invalidate cache to force re-parsing
+# INVALIDATE_CACHE=true
+
+# Optional: Set parsing language (e.g., "en", "es", "fr", etc.)
+# PARSING_LANGUAGE=en
+
+# Optional: Maximum concurrent file processing (default: 3)
+# MAX_CONCURRENT_FILES=3 

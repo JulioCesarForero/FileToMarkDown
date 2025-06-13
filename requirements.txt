@@ -1,5 +1,4 @@
-packaging==24.1
-pdf2image==1.17.0
-pillow==10.4.0
-PyMuPDF==1.24.11
-pytesseract==0.3.13
+llama_cloud_services==0.6.32
+llama_index==0.12.42
+nest_asyncio==1.6.0
+python-dotenv==1.0.0

@@ -36,3 +36,11 @@ Este proyecto permite convertir archivos PDF a formato Markdown (.md) utilizando
     ```bash
     pip install -r requirements.txt
     ```
+
+
+
+Instalas pipreqs:
+pip install pipreqs
+Luego ejecutas:
+pipreqs /ruta/a/tu/proyecto --force
+Esto genera un requirements.txt basado en las importaciones reales encontradas en tus archivos .py.
