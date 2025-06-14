@@ -75,6 +75,8 @@ for input_file in input_files:
         file_path = os.path.join(input_dir, input_file)
         
         # Parse the document
+        # https://docs.cloud.llamaindex.ai/llamaparse/presets_and_modes/auto_mode
+        
         documents = LlamaParse(
             result_type="markdown",
             auto_mode=True,

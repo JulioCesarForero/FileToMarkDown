@@ -22,11 +22,17 @@ Este proyecto permite convertir archivos PDF a formato Markdown (.md) utilizando
     ```
 3. Crea y activa un entorno virtual:
 
+    Crea el entorno virtual 
+
     ```bash
     python -m venv venv
+    ```
+    
+    Activar el virtual environment
+    ```bash
     venv\Scripts\activate  # En Windows
     ```
- 
+
     ```bash
     source venv/bin/activate  # En Linux/WSL
     ```
@@ -37,10 +43,20 @@ Este proyecto permite convertir archivos PDF a formato Markdown (.md) utilizando
     pip install -r requirements.txt
     ```
 
+5. Se deben guardar los archivos a convertir en la carpeta *InputFiles*
+
+6. Ejecutar el programa 
 
 
-Instalas pipreqs:
+---
+
+### Instalas pipreqs
+
+```bash
 pip install pipreqs
+```
 Luego ejecutas:
+```bash
 pipreqs /ruta/a/tu/proyecto --force
+```
 Esto genera un requirements.txt basado en las importaciones reales encontradas en tus archivos .py.
