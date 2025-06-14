@@ -2,8 +2,10 @@
 LLAMA_CLOUD_API_KEY=llx-your-api-key-here
 
 # Required Directories
-INPUT_DIR=input
-OUTPUT_DIR=output
+
+INPUT_DIR=.\InputFiles
+OUTPUT_DIR=.\OutputFiles
+CONSOLIDATED_DIR=.\Consolidated
 
 # Optional: Charts output directory (default: charts)
 CHARTS_OUTPUT_DIR=charts
