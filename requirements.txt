@@ -2,3 +2,6 @@ llama_cloud_services==0.6.32
 llama_index==0.12.42
 nest_asyncio==1.6.0
 python-dotenv==1.0.1
+flask==3.0.0
+flask-cors==4.0.0
+werkzeug==3.0.1

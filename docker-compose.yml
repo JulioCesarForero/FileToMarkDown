@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - FLASK_APP=app.py
+    volumes:
+      - ./InputFiles:/app/InputFiles
+      - ./OutputFiles:/app/OutputFiles
+      - ./.env:/app/.env
+    restart: unless-stopped
+    networks:
+      - filetomarkdown
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:5000/api
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - filetomarkdown
+
+networks:
+  filetomarkdown:
+    driver: bridge
+
+volumes:
+  input_files:
+  output_files:
