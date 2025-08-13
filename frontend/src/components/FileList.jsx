@@ -26,6 +26,46 @@ const FileList = ({ files, type = 'input', onFileDeleted, onRefresh }) => {
     });
   };
 
+  // Natural sort function for alphanumeric sorting
+  const naturalSort = (a, b) => {
+    const reA = /[^a-zA-Z]/g;
+    const reN = /[^0-9]/g;
+    
+    const aA = a.replace(reA, "");
+    const bA = b.replace(reA, "");
+    
+    if (aA === bA) {
+      const aN = parseInt(a.replace(reN, ""), 10);
+      const bN = parseInt(b.replace(reN, ""), 10);
+      return aN === bN ? 0 : aN > bN ? 1 : -1;
+    } else {
+      return aA > bA ? 1 : -1;
+    }
+  };
+
+  // Enhanced natural sort that handles complex alphanumeric strings
+  const naturalCompare = (a, b) => {
+    const ax = [];
+    const bx = [];
+
+    a.replace(/(\d+)|(\D+)/g, (_, $1, $2) => {
+      ax.push([$1 || Infinity, $2 || ""]);
+    });
+    
+    b.replace(/(\d+)|(\D+)/g, (_, $1, $2) => {
+      bx.push([$1 || Infinity, $2 || ""]);
+    });
+
+    while (ax.length && bx.length) {
+      const an = ax.shift();
+      const bn = bx.shift();
+      const nn = (an[0] - bn[0]) || an[1].localeCompare(bn[1]);
+      if (nn) return nn;
+    }
+
+    return ax.length - bx.length;
+  };
+
   // Memoized sorted files to avoid unnecessary re-sorting
   const sortedFiles = useMemo(() => {
     if (!files || files.length === 0) return [];
@@ -33,9 +73,9 @@ const FileList = ({ files, type = 'input', onFileDeleted, onRefresh }) => {
     const filesCopy = [...files];
     
     if (sortOrder === 'asc') {
-      return filesCopy.sort((a, b) => a.name.localeCompare(b.name));
+      return filesCopy.sort((a, b) => naturalCompare(a.name, b.name));
     } else if (sortOrder === 'desc') {
-      return filesCopy.sort((a, b) => b.name.localeCompare(a.name));
+      return filesCopy.sort((a, b) => naturalCompare(b.name, a.name));
     }
     
     return filesCopy; // Return original order if no sorting

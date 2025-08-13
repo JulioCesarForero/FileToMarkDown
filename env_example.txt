@@ -24,3 +24,6 @@ CHARTS_OUTPUT_DIR=charts
 
 # Optional: Maximum concurrent file processing (default: 3)
 # MAX_CONCURRENT_FILES=3 
+
+# Optional: Add delay between file processing (in seconds)
+DELAY_BETWEEN_FILES=5

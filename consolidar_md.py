@@ -1,7 +1,22 @@
 import os
+import re
 
 directorio_entrada = os.getenv("OUTPUT_DIR", "OutputFiles")
 archivo_salida = os.getenv("CONSOLIDATED_DIR", "Consolidated.md")
+
+
+def natural_sort_key(text):
+    """
+    Función para generar una clave de ordenamiento natural que maneja números correctamente
+    Convierte '10_archivo.txt' para que se ordene después de '2_archivo.txt'
+    """
+    def convert(text_part):
+        if text_part.isdigit():
+            return int(text_part)
+        return text_part.lower()
+    
+    # Divide el texto en partes numéricas y de texto
+    return [convert(c) for c in re.split('([0-9]+)', text)]
 
 
 def consolidar_markdowns(directorio_entrada, archivo_salida):
@@ -15,17 +30,23 @@ def consolidar_markdowns(directorio_entrada, archivo_salida):
     if directorio_salida and not os.path.exists(directorio_salida):
         os.makedirs(directorio_salida)
     
-    # Buscar archivos .md en el directorio
-    archivos_md = sorted([
+    # Buscar archivos .md en el directorio y ordenarlos naturalmente
+    archivos_md = [
         f for f in os.listdir(directorio_entrada)
         if f.endswith('.md')
-    ])
+    ]
+    
+    # Aplicar ordenamiento natural para manejar números correctamente
+    archivos_md.sort(key=natural_sort_key)
     
     if not archivos_md:
         print(f"⚠️  No se encontraron archivos .md en '{directorio_entrada}'")
         return False
 
-    print(f"📝 Consolidando {len(archivos_md)} archivos .md...")
+    print(f"📝 Consolidando {len(archivos_md)} archivos .md en orden natural...")
+    print("📋 Orden de procesamiento:")
+    for i, archivo in enumerate(archivos_md, 1):
+        print(f"  {i}. {archivo}")
     
     try:
         with open(archivo_salida, 'w', encoding='utf-8') as salida:
