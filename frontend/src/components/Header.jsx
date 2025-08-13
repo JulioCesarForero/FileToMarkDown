@@ -55,7 +55,7 @@ const Header = () => {
               </button>
               
               <a
-                href="https://github.com/JulioCesarForero"
+                href="https://github.com/JulioCesarForero/FileToMarkDown"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
