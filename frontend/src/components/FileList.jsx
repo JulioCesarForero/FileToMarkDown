@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
-import { File, Download, Trash2, Eye, Calendar, HardDrive } from 'lucide-react';
-import { fileAPI } from '../services/api';
+import React, { useState, useMemo } from 'react';
+import { File, Download, Trash2, Eye, Calendar, HardDrive, ArrowUpDown, ArrowUp, ArrowDown, Package } from 'lucide-react';
+import { fileAPI, processingAPI } from '../services/api';
 
 const FileList = ({ files, type = 'input', onFileDeleted, onRefresh }) => {
   const [deleting, setDeleting] = useState(null);
   const [downloading, setDownloading] = useState(null);
+  const [consolidating, setConsolidating] = useState(false);
+  const [sortOrder, setSortOrder] = useState('none'); // 'none', 'asc', 'desc'
 
   const formatFileSize = (bytes) => {
     if (bytes === 0) return '0 Bytes';
@@ -22,6 +24,74 @@ const FileList = ({ files, type = 'input', onFileDeleted, onRefresh }) => {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  // Memoized sorted files to avoid unnecessary re-sorting
+  const sortedFiles = useMemo(() => {
+    if (!files || files.length === 0) return [];
+    
+    const filesCopy = [...files];
+    
+    if (sortOrder === 'asc') {
+      return filesCopy.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortOrder === 'desc') {
+      return filesCopy.sort((a, b) => b.name.localeCompare(a.name));
+    }
+    
+    return filesCopy; // Return original order if no sorting
+  }, [files, sortOrder]);
+
+  const toggleSortOrder = () => {
+    if (sortOrder === 'none') {
+      setSortOrder('asc');
+    } else if (sortOrder === 'asc') {
+      setSortOrder('desc');
+    } else {
+      setSortOrder('none');
+    }
+  };
+
+  const getSortIcon = () => {
+    switch (sortOrder) {
+      case 'asc':
+        return <ArrowUp className="w-4 h-4" />;
+      case 'desc':
+        return <ArrowDown className="w-4 h-4" />;
+      default:
+        return <ArrowUpDown className="w-4 h-4" />;
+    }
+  };
+
+  const getSortText = () => {
+    switch (sortOrder) {
+      case 'asc':
+        return 'Ordenado A-Z';
+      case 'desc':
+        return 'Ordenado Z-A';
+      default:
+        return 'Sin ordenar';
+    }
+  };
+
+  const handleConsolidate = async () => {
+    if (!window.confirm('¿Deseas consolidar todos los archivos procesados en un único archivo? El orden actual se respetará.')) {
+      return;
+    }
+
+    setConsolidating(true);
+    try {
+      const result = await processingAPI.consolidate();
+      alert(`Archivo consolidado creado exitosamente: ${result.filename || 'consolidated.md'}`);
+      
+      if (onRefresh) {
+        onRefresh();
+      }
+    } catch (error) {
+      console.error('Error consolidating files:', error);
+      alert('Error al consolidar los archivos: ' + (error.response?.data?.error || error.message));
+    } finally {
+      setConsolidating(false);
+    }
   };
 
   const handleDelete = async (filename) => {
@@ -112,8 +182,49 @@ const FileList = ({ files, type = 'input', onFileDeleted, onRefresh }) => {
   }
 
   return (
-    <div className="space-y-3">
-      {files.map((file) => (
+    <div className="space-y-4">
+      {/* Header with controls for output files */}
+      {type === 'output' && sortedFiles.length > 0 && (
+        <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={toggleSortOrder}
+              className="flex items-center space-x-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              title="Cambiar orden alfabético"
+            >
+              {getSortIcon()}
+              <span>{getSortText()}</span>
+            </button>
+            
+            <span className="text-sm text-gray-600">
+              {sortedFiles.length} archivo(s) procesado(s)
+            </span>
+          </div>
+          
+          <button
+            onClick={handleConsolidate}
+            disabled={consolidating || sortedFiles.length === 0}
+            className="flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            title="Consolidar todos los archivos en uno solo"
+          >
+            {consolidating ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>Consolidando...</span>
+              </>
+            ) : (
+              <>
+                <Package className="w-4 h-4" />
+                <span>Consolidar archivos</span>
+              </>
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* Files list */}
+      <div className="space-y-3">
+        {sortedFiles.map((file) => (
         <div
           key={file.name}
           className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
@@ -173,6 +284,7 @@ const FileList = ({ files, type = 'input', onFileDeleted, onRefresh }) => {
           </div>
         </div>
       ))}
+      </div>
     </div>
   );
 };
