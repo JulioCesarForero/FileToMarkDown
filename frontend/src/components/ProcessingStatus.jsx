@@ -10,7 +10,8 @@ const ProcessingStatus = ({ onProcessingComplete }) => {
     let interval;
     
     if (isPolling) {
-      interval = setInterval(fetchStatus, 1000);
+      // Poll more frequently during processing for better real-time updates
+      interval = setInterval(fetchStatus, 500); // Every 500ms instead of 1000ms
     }
     
     return () => {
@@ -23,6 +24,7 @@ const ProcessingStatus = ({ onProcessingComplete }) => {
   const fetchStatus = async () => {
     try {
       const currentStatus = await processingAPI.getStatus();
+      console.log('Status update:', currentStatus); // Debug log
       setStatus(currentStatus);
       
       if (!currentStatus.is_processing && isPolling) {
@@ -131,19 +133,31 @@ const ProcessingStatus = ({ onProcessingComplete }) => {
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium text-gray-700">
-            Progreso: {Math.round(status.progress)}%
+            Progreso: {Math.round(status.progress || 0)}%
           </span>
           <span className="text-sm text-gray-500">
-            {status.processed_files} / {status.total_files} archivos
+            {status.processed_files || 0} / {status.total_files || 0} archivos procesados
           </span>
         </div>
         
-        <div className="w-full bg-gray-200 rounded-full h-3">
+        <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
           <div
-            className={`h-3 rounded-full transition-all duration-300 ${getProgressColor(status.progress)}`}
-            style={{ width: `${status.progress}%` }}
+            className={`h-3 rounded-full transition-all duration-500 ease-out ${getProgressColor(status.progress || 0)}`}
+            style={{ width: `${Math.max(status.progress || 0, 0)}%` }}
           ></div>
         </div>
+        
+        {/* Additional progress info */}
+        {status.is_processing && (
+          <div className="flex justify-between items-center mt-2 text-xs text-gray-500">
+            <span>
+              {status.processed_files > 0 ? `Completados: ${status.processed_files}` : 'Iniciando...'}
+            </span>
+            <span>
+              {status.total_files > 0 ? `Restantes: ${(status.total_files || 0) - (status.processed_files || 0)}` : ''}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Current File */}
@@ -164,19 +178,26 @@ const ProcessingStatus = ({ onProcessingComplete }) => {
       )}
 
       {/* Statistics */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="text-center p-3 bg-gray-50 rounded-lg">
           <div className="text-2xl font-bold text-gray-900">
-            {status.total_files}
+            {status.total_files || 0}
           </div>
-          <div className="text-sm text-gray-500">Total de archivos</div>
+          <div className="text-sm text-gray-500">Total</div>
         </div>
         
-        <div className="text-center p-3 bg-gray-50 rounded-lg">
-          <div className="text-2xl font-bold text-gray-900">
-            {status.processed_files}
+        <div className="text-center p-3 bg-green-50 rounded-lg">
+          <div className="text-2xl font-bold text-green-600">
+            {status.processed_files || 0}
           </div>
-          <div className="text-sm text-gray-500">Procesados</div>
+          <div className="text-sm text-green-600">Completados</div>
+        </div>
+        
+        <div className="text-center p-3 bg-red-50 rounded-lg">
+          <div className="text-2xl font-bold text-red-600">
+            {(status.errors && status.errors.length) || 0}
+          </div>
+          <div className="text-sm text-red-600">Errores</div>
         </div>
       </div>
 

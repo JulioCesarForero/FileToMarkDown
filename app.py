@@ -222,22 +222,52 @@ def download_file(filename):
         return jsonify({'error': str(e)}), 500
 
 def process_files_background(input_files):
-    """Process files in background thread"""
+    """Process files in background thread with real-time progress updates"""
     global processing_status
     
     try:
-        for i, filename in enumerate(input_files):
+        # Initialize processing state
+        processing_status.update({
+            'current_file': 'Iniciando procesamiento...',
+            'progress': 0,
+            'total_files': len(input_files),
+            'processed_files': 0
+        })
+        
+        # Get supported files from input directory
+        input_files_to_process = file_to_md.get_supported_files(file_to_md.input_dir)
+        
+        if not input_files_to_process:
+            processing_status.update({
+                'current_file': 'No hay archivos para procesar',
+                'errors': [{'file': 'system', 'error': 'No se encontraron archivos válidos para procesar'}]
+            })
+            return
+        
+        # Update total files count
+        processing_status['total_files'] = len(input_files_to_process)
+        processing_status['current_file'] = f'Procesando {len(input_files_to_process)} archivos...'
+        processing_status['progress'] = 5
+        
+        # Process files one by one with progress tracking
+        successful_files = 0
+        failed_files = []
+        
+        for i, filename in enumerate(input_files_to_process, 1):
             if not processing_status['is_processing']:
                 break
                 
-            processing_status['current_file'] = filename
-            processing_status['progress'] = (i / len(input_files)) * 100
+            processing_status.update({
+                'current_file': filename,
+                'progress': (i / len(input_files_to_process)) * 90,  # Reserve 10% for completion
+                'processed_files': i - 1
+            })
             
             try:
                 # Process single file using file_to_md logic
                 file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 
-                # Import and run the processing logic
+                # Use LlamaParse directly
                 documents = file_to_md.LlamaParse(
                     result_type="markdown",
                     auto_mode=True,
@@ -261,32 +291,61 @@ def process_files_background(input_files):
                 with open(output_path, 'w', encoding='utf-8') as f:
                     f.write(markdown_content)
                 
-                processing_status['processed_files'] += 1
+                # Verify file was created and has content
+                if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
+                    successful_files += 1
+                    processing_status['processed_files'] = successful_files
+                else:
+                    failed_files.append(filename)
+                    processing_status['errors'].append({
+                        'file': filename,
+                        'error': 'Archivo creado pero está vacío'
+                    })
                 
             except Exception as e:
+                error_msg = str(e)
+                failed_files.append(filename)
                 processing_status['errors'].append({
                     'file': filename,
-                    'error': str(e)
+                    'error': error_msg
                 })
+                
+                # Check for rate limiting errors
+                if file_to_md.is_rate_limit_error(e):
+                    processing_status.update({
+                        'current_file': 'Error de límite de API detectado - Deteniendo procesamiento',
+                        'errors': processing_status['errors'] + [{
+                            'file': 'system',
+                            'error': 'Límite de API excedido. Espera 15-30 minutos antes de reintentar.'
+                        }]
+                    })
+                    break
             
-            # Small delay to prevent overwhelming the system
-            time.sleep(0.1)
+            # Small delay to prevent overwhelming the system and API
+            time.sleep(1)
         
-        # Processing complete
+        # Final status update
         processing_status.update({
-            'is_processing': False,
-            'current_file': None,
+            'current_file': 'Procesamiento completado',
             'progress': 100,
-            'end_time': time.time()
+            'processed_files': successful_files
         })
+        
+        if failed_files:
+            processing_status['current_file'] = f'Completado con {len(failed_files)} errores'
         
     except Exception as e:
         processing_status.update({
-            'is_processing': False,
-            'current_file': None,
-            'errors': processing_status['errors'] + [{'file': 'system', 'error': str(e)}],
-            'end_time': time.time()
+            'current_file': 'Error en procesamiento',
+            'errors': processing_status['errors'] + [{
+                'file': 'system',
+                'error': f"Error crítico: {str(e)}"
+            }]
         })
+    
+    finally:
+        processing_status['is_processing'] = False
+        processing_status['end_time'] = time.time()
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
