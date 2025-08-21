@@ -40,9 +40,21 @@ const FileUpload = ({ onFileUploaded, onError }) => {
 
   const addFiles = (newFiles) => {
     const validFiles = newFiles.filter(file => {
-      const supportedFormats = ['.pdf', '.docx', '.doc', '.txt', '.pptx', '.xlsx', '.epub'];
+      // Get all supported formats from the complete list
+      const supportedFormats = getAllSupportedFormats();
+      
       const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
-      return supportedFormats.includes(fileExtension) && file.size <= 100 * 1024 * 1024; // 100MB max
+      
+      // Check if file type is supported
+      const isSupported = supportedFormats.includes(fileExtension);
+      
+      // Check file size limit (100MB for most files, 20MB for audio)
+      const audioTypes = ['.mp3', '.mp4', '.mpeg', '.mpga', '.m4a', '.wav', '.webm'];
+      const isAudio = audioTypes.includes(fileExtension);
+      const maxSize = isAudio ? 20 * 1024 * 1024 : 100 * 1024 * 1024; // 20MB for audio, 100MB for others
+      const isValidSize = file.size <= maxSize;
+      
+      return isSupported && isValidSize;
     });
 
     setSelectedFiles(prev => {
@@ -59,7 +71,7 @@ const FileUpload = ({ onFileUploaded, onError }) => {
     if (validFiles.length !== newFiles.length) {
       setUploadStatus({
         type: 'error',
-        message: 'Algunos archivos fueron filtrados (formato no soportado o tamaño mayor a 100MB)',
+        message: 'Algunos archivos fueron filtrados (formato no soportado o tamaño excede el límite)',
       });
       setTimeout(() => setUploadStatus(null), 5000);
     }
@@ -158,7 +170,62 @@ const FileUpload = ({ onFileUploaded, onError }) => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const supportedFormats = ['.pdf', '.docx', '.doc', '.txt', '.pptx', '.xlsx', '.epub'];
+  const supportedFormats = [
+    // Base types
+    '.pdf',
+    // Documents and presentations
+    '.doc', '.docx', '.docm', '.dot', '.dotm', '.ppt', '.pptx', '.pptm', '.pot', '.potx', '.potm',
+    '.rtf', '.txt', '.xml', '.epub', '.abw', '.hwp', '.key', '.pages', '.sxi', '.sxw',
+    // Images
+    '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg', '.tiff', '.webp', '.htm', '.html',
+    // Spreadsheets
+    '.xlsx', '.xls', '.xlsm', '.xlsb', '.csv', '.ods', '.numbers',
+    // Audio
+    '.mp3', '.mp4', '.mpeg', '.mpga', '.m4a', '.wav', '.webm'
+  ];
+
+  const getSupportedFormatsDisplay = () => {
+    const baseTypes = ['.pdf'];
+    const docPresTypes = ['.doc', '.docx', '.ppt', '.pptx', '.rtf', '.txt', '.xml', '.epub'];
+    const imageTypes = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg', '.tiff', '.webp'];
+    const spreadsheetTypes = ['.xlsx', '.xls', '.csv', '.ods'];
+    const audioTypes = ['.mp3', '.mp4', '.wav', '.webm'];
+    
+    return {
+      baseTypes,
+      docPresTypes,
+      imageTypes,
+      spreadsheetTypes,
+      audioTypes
+    };
+  };
+
+  const getAllSupportedFormats = () => {
+    // Complete list of all supported formats for validation
+    const baseTypes = ['.pdf'];
+    const docPresTypes = [
+      '.602', '.abw', '.cgm', '.cwk', '.doc', '.docx', '.docm', '.dot', '.dotm',
+      '.hwp', '.key', '.lwp', '.mw', '.mcw', '.pages', '.pbd', '.ppt', '.pptm',
+      '.pptx', '.pot', '.potm', '.potx', '.rtf', '.sda', '.sdd', '.sdp', '.sdw',
+      '.sgl', '.sti', '.sxi', '.sxw', '.stw', '.sxg', '.txt', '.uof', '.uop',
+      '.uot', '.vor', '.wpd', '.wps', '.xml', '.zabw', '.epub'
+    ];
+    const imageTypes = [
+      '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg', '.tiff', '.webp',
+      '.web', '.htm', '.html'
+    ];
+    const spreadsheetTypes = [
+      '.xlsx', '.xls', '.xlsm', '.xlsb', '.xlw', '.csv', '.dif', '.sylk',
+      '.slk', '.prn', '.numbers', '.et', '.ods', '.fods', '.uos1', '.uos2',
+      '.dbf', '.wk1', '.wk2', '.wk3', '.wk4', '.wks', '.123', '.wq1', '.wq2',
+      '.wb1', '.wb2', '.wb3', '.qpw', '.xlr', '.eth', '.tsv'
+    ];
+    const audioTypes = [
+      '.mp3', '.mp4', '.mpeg', '.mpga', '.m4a', '.wav', '.webm'
+    ];
+    
+    return [...baseTypes, ...docPresTypes, ...imageTypes, ...spreadsheetTypes, ...audioTypes];
+  };
 
   return (
     <div className="w-full">
@@ -179,7 +246,7 @@ const FileUpload = ({ onFileUploaded, onError }) => {
           type="file"
           className="hidden"
           onChange={handleFileInput}
-          accept={supportedFormats.join(',')}
+          accept=".pdf,.doc,.docx,.docm,.dot,.dotm,.ppt,.pptx,.pptm,.pot,.potx,.potm,.rtf,.txt,.xml,.epub,.abw,.hwp,.key,.pages,.sxi,.sxw,.jpg,.jpeg,.png,.gif,.bmp,.svg,.tiff,.webp,.htm,.html,.xlsx,.xls,.xlsm,.xlsb,.csv,.ods,.numbers,.mp3,.mp4,.mpeg,.mpga,.m4a,.wav,.webm"
           multiple
         />
         
@@ -211,8 +278,26 @@ const FileUpload = ({ onFileUploaded, onError }) => {
           </div>
           
           <div className="text-xs text-gray-400">
-            <p>Formatos soportados: {supportedFormats.join(', ')}</p>
-            <p>Tamaño máximo por archivo: 100MB</p>
+            <p className="mb-2">Formatos soportados:</p>
+            <div className="grid grid-cols-2 gap-2 text-left max-w-md mx-auto">
+              <div>
+                <p className="font-medium text-gray-500 mb-1">📄 Documentos:</p>
+                <p className="text-xs">PDF, DOC, DOCX, PPT, PPTX, RTF, TXT, EPUB</p>
+              </div>
+              <div>
+                <p className="font-medium text-gray-500 mb-1">🖼️ Imágenes:</p>
+                <p className="text-xs">JPG, PNG, GIF, SVG, TIFF, WebP</p>
+              </div>
+              <div>
+                <p className="font-medium text-gray-500 mb-1">📊 Hojas de cálculo:</p>
+                <p className="text-xs">XLSX, XLS, CSV, ODS, Numbers</p>
+              </div>
+              <div>
+                <p className="font-medium text-gray-500 mb-1">🎵 Audio:</p>
+                <p className="text-xs">MP3, MP4, WAV, WebM</p>
+              </div>
+            </div>
+            <p className="mt-2">Tamaño máximo: 100MB (20MB para audio)</p>
             <p>Puedes seleccionar múltiples archivos</p>
           </div>
         </div>

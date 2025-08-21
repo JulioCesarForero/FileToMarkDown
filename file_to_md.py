@@ -40,7 +40,43 @@ os.makedirs(output_dir, exist_ok=True)
 def get_supported_files(input_dir):
     """Get all supported files from input directory."""
     # Get all files from input directory
-    supported_extensions = ['.pdf', '.docx', '.doc', '.txt', '.pptx', '.xlsx', '.epub']
+    # Supported file types based on LlamaParse official documentation
+    # https://docs.cloud.llamaindex.ai/llamaparse/features/supported_document_types
+    
+    # Base types
+    base_types = ['.pdf']
+    
+    # Documents and presentations
+    doc_pres_types = [
+        '.602', '.abw', '.cgm', '.cwk', '.doc', '.docx', '.docm', '.dot', '.dotm',
+        '.hwp', '.key', '.lwp', '.mw', '.mcw', '.pages', '.pbd', '.ppt', '.pptm',
+        '.pptx', '.pot', '.potm', '.potx', '.rtf', '.sda', '.sdd', '.sdp', '.sdw',
+        '.sgl', '.sti', '.sxi', '.sxw', '.stw', '.sxg', '.txt', '.uof', '.uop',
+        '.uot', '.vor', '.wpd', '.wps', '.xml', '.zabw', '.epub'
+    ]
+    
+    # Images
+    image_types = [
+        '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg', '.tiff', '.webp',
+        '.web', '.htm', '.html'
+    ]
+    
+    # Spreadsheets
+    spreadsheet_types = [
+        '.xlsx', '.xls', '.xlsm', '.xlsb', '.xlw', '.csv', '.dif', '.sylk',
+        '.slk', '.prn', '.numbers', '.et', '.ods', '.fods', '.uos1', '.uos2',
+        '.dbf', '.wk1', '.wk2', '.wk3', '.wk4', '.wks', '.123', '.wq1', '.wq2',
+        '.wb1', '.wb2', '.wb3', '.qpw', '.xlr', '.eth', '.tsv'
+    ]
+    
+    # Audio (limited to 20MB by LlamaParse)
+    audio_types = [
+        '.mp3', '.mp4', '.mpeg', '.mpga', '.m4a', '.wav', '.webm'
+    ]
+    
+    # Combine all supported extensions
+    supported_extensions = base_types + doc_pres_types + image_types + spreadsheet_types + audio_types
+    
     input_files = []
 
     if os.path.exists(input_dir):

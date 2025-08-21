@@ -45,10 +45,19 @@ def start_backend():
             print("❌ Error: app.py no encontrado")
             return None
         
+        # Usar el intérprete de Python del entorno virtual si existe
+        venv_python = Path("venv/Scripts/python.exe")
+        if venv_python.exists():
+            python_exe = str(venv_python)
+            print("✅ Usando Python del entorno virtual")
+        else:
+            python_exe = sys.executable
+            print("⚠️  Usando Python del sistema")
+        
         # Iniciar Flask
         process = subprocess.Popen([
-            sys.executable, "app.py"
-        ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            python_exe, "app.py"
+        ], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         
         # Esperar un momento para que Flask inicie
         time.sleep(3)
@@ -57,7 +66,12 @@ def start_backend():
             print("✅ Backend Flask iniciado en http://localhost:5000")
             return process
         else:
+            stdout, stderr = process.communicate()
             print("❌ Error al iniciar Flask")
+            if stderr:
+                print(f"   Error: {stderr.decode('utf-8', errors='ignore')}")
+            if stdout:
+                print(f"   Output: {stdout.decode('utf-8', errors='ignore')}")
             return None
             
     except Exception as e:
@@ -78,7 +92,7 @@ def start_frontend():
         use_yarn = True
         try:
             subprocess.run(["yarn", "--version"], 
-                         check=True, capture_output=True)
+                         check=True, capture_output=True, shell=True)
             print("✅ Yarn encontrado (recomendado)")
         except (subprocess.CalledProcessError, FileNotFoundError):
             use_yarn = False
@@ -88,19 +102,19 @@ def start_frontend():
         if not (frontend_dir / "node_modules").exists():
             print("📦 Instalando dependencias de Node.js...")
             if use_yarn:
-                subprocess.run(["yarn", "install"], cwd=frontend_dir, check=True)
+                subprocess.run(["yarn", "install"], cwd=frontend_dir, check=True, shell=True)
             else:
-                subprocess.run(["npm", "install"], cwd=frontend_dir, check=True)
+                subprocess.run(["npm", "install"], cwd=frontend_dir, check=True, shell=True)
         
         # Iniciar React con Vite
         if use_yarn:
             process = subprocess.Popen([
                 "yarn", "dev"
-            ], cwd=frontend_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            ], cwd=frontend_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         else:
             process = subprocess.Popen([
                 "npm", "run", "dev"
-            ], cwd=frontend_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            ], cwd=frontend_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         
         # Esperar un momento para que Vite inicie
         time.sleep(5)
@@ -109,7 +123,12 @@ def start_frontend():
             print("✅ Frontend React iniciado en http://localhost:5173")
             return process
         else:
+            stdout, stderr = process.communicate()
             print("❌ Error al iniciar React")
+            if stderr:
+                print(f"   Error: {stderr.decode('utf-8', errors='ignore')}")
+            if stdout:
+                print(f"   Output: {stdout.decode('utf-8', errors='ignore')}")
             return None
             
     except Exception as e:
