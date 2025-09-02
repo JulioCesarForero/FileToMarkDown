@@ -3,6 +3,7 @@ import Header from './components/Header.jsx';
 import FileUpload from './components/FileUpload.jsx';
 import FileList from './components/FileList.jsx';
 import ProcessingStatus from './components/ProcessingStatus.jsx';
+import BulkActions from './components/BulkActions.jsx';
 import { fileAPI, healthAPI } from './services/api';
 import { AlertCircle, CheckCircle, RefreshCw } from 'lucide-react';
 
@@ -131,6 +132,9 @@ function App() {
             </div>
           </div>
         )}
+
+        {/* Bulk Actions Section */}
+        <BulkActions onFilesChanged={fetchFiles} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - File Upload and Processing */}

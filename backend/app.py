@@ -347,5 +347,70 @@ def process_files_background(input_files):
         processing_status['is_processing'] = False
         processing_status['end_time'] = time.time()
 
+@app.route('/api/files/download-all', methods=['GET'])
+def download_all_processed_files():
+    """Download all processed markdown files as a ZIP archive"""
+    try:
+        import zipfile
+        import io
+        
+        # Check if there are any processed files
+        if not os.path.exists(app.config['OUTPUT_FOLDER']):
+            return jsonify({'error': 'No hay archivos procesados'}), 404
+        
+        output_files = [f for f in os.listdir(app.config['OUTPUT_FOLDER']) if f.endswith('.md')]
+        
+        if not output_files:
+            return jsonify({'error': 'No hay archivos procesados para descargar'}), 404
+        
+        # Create ZIP file in memory
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            for filename in output_files:
+                file_path = os.path.join(app.config['OUTPUT_FOLDER'], filename)
+                zip_file.write(file_path, filename)
+        
+        zip_buffer.seek(0)
+        
+        return send_file(
+            zip_buffer,
+            mimetype='application/zip',
+            as_attachment=True,
+            download_name='archivos_procesados.zip'
+        )
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/files/delete-all', methods=['DELETE'])
+def delete_all_input_files():
+    """Delete all input files"""
+    try:
+        if not os.path.exists(app.config['UPLOAD_FOLDER']):
+            return jsonify({'error': 'No hay archivos de entrada'}), 404
+        
+        input_files = [f for f in os.listdir(app.config['UPLOAD_FOLDER']) if os.path.isfile(os.path.join(app.config['UPLOAD_FOLDER'], f))]
+        
+        if not input_files:
+            return jsonify({'error': 'No hay archivos de entrada para borrar'}), 404
+        
+        deleted_count = 0
+        for filename in input_files:
+            try:
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                os.remove(file_path)
+                deleted_count += 1
+            except Exception as e:
+                # Continue with other files even if one fails
+                continue
+        
+        return jsonify({
+            'message': f'Se borraron {deleted_count} archivos de entrada',
+            'deleted_count': deleted_count
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

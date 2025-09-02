@@ -5,7 +5,7 @@ const API_BASE_URL = '/api';
 // Create axios instance with default config
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 30000, // 30 seconds
+  timeout: 60000, // 60 seconds for file uploads
   headers: {
     'Content-Type': 'application/json',
   },
@@ -67,6 +67,20 @@ export const fileAPI = {
     const response = await api.get(`/files/download/${filename}`, {
       responseType: 'blob',
     });
+    return response.data;
+  },
+
+  // Download all processed files as ZIP
+  downloadAll: async () => {
+    const response = await api.get('/files/download-all', {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  // Delete all input files
+  deleteAll: async () => {
+    const response = await api.delete('/files/delete-all');
     return response.data;
   },
 };
