@@ -37,7 +37,7 @@ processing_status = {
 }
 
 # Supported file extensions
-SUPPORTED_EXTENSIONS = {'.pdf', '.docx', '.doc', '.txt', '.pptx', '.xlsx', '.epub'}
+SUPPORTED_EXTENSIONS = {'.pdf', '.docx', '.doc', '.txt', '.pptx', '.xlsx', '.epub', '.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff', '.webp'}
 
 def allowed_file(filename):
     """Check if file extension is allowed"""
@@ -406,6 +406,53 @@ def delete_all_input_files():
         
         return jsonify({
             'message': f'Se borraron {deleted_count} archivos de entrada',
+            'deleted_count': deleted_count
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/files/delete-output/<filename>', methods=['DELETE'])
+def delete_output_file(filename):
+    """Delete processed file from OutputFiles directory"""
+    try:
+        file_path = os.path.join(app.config['OUTPUT_FOLDER'], filename)
+        
+        if not os.path.exists(file_path):
+            return jsonify({'error': 'Archivo procesado no encontrado'}), 404
+        
+        os.remove(file_path)
+        
+        return jsonify({'message': 'Archivo procesado eliminado exitosamente'})
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/files/delete-all-output', methods=['DELETE'])
+def delete_all_output_files():
+    """Delete all processed files from OutputFiles directory"""
+    try:
+        if not os.path.exists(app.config['OUTPUT_FOLDER']):
+            return jsonify({'error': 'No hay archivos procesados'}), 404
+        
+        output_files = [f for f in os.listdir(app.config['OUTPUT_FOLDER']) 
+                       if f.endswith('.md') and os.path.isfile(os.path.join(app.config['OUTPUT_FOLDER'], f))]
+        
+        if not output_files:
+            return jsonify({'error': 'No hay archivos procesados para borrar'}), 404
+        
+        deleted_count = 0
+        for filename in output_files:
+            try:
+                file_path = os.path.join(app.config['OUTPUT_FOLDER'], filename)
+                os.remove(file_path)
+                deleted_count += 1
+            except Exception as e:
+                # Continue with other files even if one fails
+                continue
+        
+        return jsonify({
+            'message': f'Se borraron {deleted_count} archivos procesados',
             'deleted_count': deleted_count
         }), 200
         

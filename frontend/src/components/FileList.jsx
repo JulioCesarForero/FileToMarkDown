@@ -204,6 +204,14 @@ const FileList = ({ files, type = 'input', onFileDeleted, onRefresh }) => {
         return <File className={`${iconClass} text-purple-500`} />;
       case 'md':
         return <File className={`${iconClass} text-blue-600`} />;
+      case 'png':
+      case 'jpg':
+      case 'jpeg':
+      case 'gif':
+      case 'bmp':
+      case 'tiff':
+      case 'webp':
+        return <File className={`${iconClass} text-pink-500`} />;
       default:
         return <File className={`${iconClass} text-gray-400`} />;
     }
