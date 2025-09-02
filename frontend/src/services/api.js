@@ -83,6 +83,18 @@ export const fileAPI = {
     const response = await api.delete('/files/delete-all');
     return response.data;
   },
+
+  // Delete processed file
+  deleteOutput: async (filename) => {
+    const response = await api.delete(`/files/delete-output/${filename}`);
+    return response.data;
+  },
+
+  // Delete all processed files
+  deleteAllOutput: async () => {
+    const response = await api.delete('/files/delete-all-output');
+    return response.data;
+  },
 };
 
 // Processing operations

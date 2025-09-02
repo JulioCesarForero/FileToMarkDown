@@ -48,11 +48,12 @@ function App() {
     fetchFiles();
   };
 
-  const handleFileDeleted = (filename) => {
+  const handleFileDeleted = (filename, type) => {
     // Update local state immediately for better UX
     setFiles(prev => ({
       ...prev,
-      input_files: prev.input_files.filter(f => f.name !== filename)
+      input_files: type === 'input' ? prev.input_files.filter(f => f.name !== filename) : prev.input_files,
+      output_files: type === 'output' ? prev.output_files.filter(f => f.name !== filename) : prev.output_files
     }));
   };
 
@@ -188,7 +189,7 @@ function App() {
               <FileList
                 files={files.input_files}
                 type="input"
-                onFileDeleted={handleFileDeleted}
+                onFileDeleted={(filename) => handleFileDeleted(filename, 'input')}
                 onRefresh={fetchFiles}
               />
             </section>
@@ -207,6 +208,7 @@ function App() {
               <FileList
                 files={files.output_files}
                 type="output"
+                onFileDeleted={(filename) => handleFileDeleted(filename, 'output')}
                 onRefresh={fetchFiles}
               />
             </section>

@@ -141,7 +141,12 @@ const FileList = ({ files, type = 'input', onFileDeleted, onRefresh }) => {
 
     setDeleting(filename);
     try {
-      await fileAPI.delete(filename);
+      if (type === 'input') {
+        await fileAPI.delete(filename);
+      } else if (type === 'output') {
+        await fileAPI.deleteOutput(filename);
+      }
+      
       if (onFileDeleted) {
         onFileDeleted(filename);
       }
@@ -292,18 +297,33 @@ const FileList = ({ files, type = 'input', onFileDeleted, onRefresh }) => {
             
             <div className="flex items-center space-x-2">
               {type === 'output' && (
-                <button
-                  onClick={() => handleDownload(file.name)}
-                  disabled={downloading === file.name}
-                  className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors disabled:opacity-50"
-                  title="Descargar archivo"
-                >
-                  {downloading === file.name ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
-                  ) : (
-                    <Download className="w-4 h-4" />
-                  )}
-                </button>
+                <>
+                  <button
+                    onClick={() => handleDownload(file.name)}
+                    disabled={downloading === file.name}
+                    className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors disabled:opacity-50"
+                    title="Descargar archivo"
+                  >
+                    {downloading === file.name ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
+                    ) : (
+                      <Download className="w-4 h-4" />
+                    )}
+                  </button>
+                  
+                  <button
+                    onClick={() => handleDelete(file.name)}
+                    disabled={deleting === file.name}
+                    className="p-2 text-gray-400 hover:text-error-600 hover:bg-error-50 rounded-lg transition-colors disabled:opacity-50"
+                    title="Eliminar archivo procesado"
+                  >
+                    {deleting === file.name ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-error-600"></div>
+                    ) : (
+                      <Trash2 className="w-4 h-4" />
+                    )}
+                  </button>
+                </>
               )}
               
               {type === 'input' && (
@@ -311,7 +331,7 @@ const FileList = ({ files, type = 'input', onFileDeleted, onRefresh }) => {
                   onClick={() => handleDelete(file.name)}
                   disabled={deleting === file.name}
                   className="p-2 text-gray-400 hover:text-error-600 hover:bg-error-50 rounded-lg transition-colors disabled:opacity-50"
-                  title="Eliminar archivo"
+                  title="Eliminar archivo de entrada"
                 >
                   {deleting === file.name ? (
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-error-600"></div>
